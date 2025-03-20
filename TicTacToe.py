@@ -1,3 +1,4 @@
+import tkinter as tk
 import random
 
 class TicTacToe:
@@ -7,12 +8,12 @@ class TicTacToe:
        self.human_player = "O"
        self.ai_player = "X"
 
-    def print_board(self):
-       """Print the current state of the board"""
-       for i in range(0, 9, 3):
-           print(f"{self.board[i]} | {self.board[i+1]} | {self.board[i+2]}")
-           if i < 6:
-               print("---------")
+    # def print_board(self):
+    #    """Print the current state of the board"""
+    #    for i in range(0, 9, 3):
+    #        print(f"{self.board[i]} | {self.board[i+1]} | {self.board[i+2]}")
+    #        if i < 6:
+    #            print("---------")
 
     def available_moves(self):
        """Returns list of available moves (indices of empty squares)"""
@@ -122,55 +123,111 @@ class TicTacToe:
 
        return best_move
     
-    def play_game(self):
-        """Main game loop"""
-        print("Welcome to Tic Tac Toe!")
-        print("You are 'O' and the AI is 'X'")
-        print("Enter positions (0-8) as shown below:")
-        print("0 | 1 | 2")
-        print("---------")
-        print("3 | 4 | 5")
-        print("---------")
-        print("6 | 7 | 8")
-        print("\n")
+    # def play_game(self):
+    #     """Main game loop"""
+    #     print("Welcome to Tic Tac Toe!")
+    #     print("You are 'O' and the AI is 'X'")
+    #     print("Enter positions (0-8) as shown below:")
+    #     print("0 | 1 | 2")
+    #     print("---------")
+    #     print("3 | 4 | 5")
+    #     print("---------")
+    #     print("6 | 7 | 8")
+    #     print("\n")
 
 
-        # Randomly decide who goes first
+    #     # Randomly decide who goes first
 
-        ai_turn = random.choice([True, False])
+    #     ai_turn = random.choice([True, False])
 
-        while not self.game_over():
-            self.print_board()
+    #     while not self.game_over():
+    #         self.print_board()
 
-            if ai_turn:
-                print("\nAI's turn...")
-                move = self.get_best_move()
-                self.make_move(move, self.ai_player)
-            else:
-                while True:
-                    try:
-                        move = int(input("\nYour turn (0-8): "))
-                        if 0 <= move <= 8 and self.make_move(move, self.human_player):
-                            break
-                        else:
-                            print("Invalid move! Try again.")
-                    except ValueError:
-                        print("Please enter a number between 0 and 8!")
+    #         if ai_turn:
+    #             print("\nAI's turn...")
+    #             move = self.get_best_move()
+    #             self.make_move(move, self.ai_player)
+    #         else:
+    #             while True:
+    #                 try:
+    #                     move = int(input("\nYour turn (0-8): "))
+    #                     if 0 <= move <= 8 and self.make_move(move, self.human_player):
+    #                         break
+    #                     else:
+    #                         print("Invalid move! Try again.")
+    #                 except ValueError:
+    #                     print("Please enter a number between 0 and 8!")
 
-            ai_turn = not ai_turn
+    #         ai_turn = not ai_turn
         
-        # Game over
-        self.print_board()
-        winner = self.check_winner()
-        if winner == self.ai_player:
-            print("\nAI wins!")
-        elif winner == self.human_player:
-            print("\nCongratulations! You win!")
-        else:
-            print("\nIt's a tie!")
+    #     # Game over
+    #     self.print_board()
+    #     winner = self.check_winner()
+    #     if winner == self.ai_player:
+    #         print("\nAI wins!")
+    #     elif winner == self.human_player:
+    #         print("\nCongratulations! You win!")
+    #     else:
+    #         print("\nIt's a tie!")
 
+class TicTacToeGUI: 
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Tic Tac Toe")
+        self.game = TicTacToe()
+        self.buttons = []
+
+        self.ai_turn = random.choice([True, False])
+        self.create_widgets()
+        if self.ai_turn:
+            self.master.after(500, self.ai_move)
+
+    def create_widgets(self):
+        for i in range(9):
+            btn = tk.Button(self.master, text=" ", font=("Helvetica", 32), width=4, height=2, command=lambda i=i: self.human_move(i))
+            btn.grid(row=i // 3, column=i % 3)
+            self.buttons.append(btn)
+
+    def human_move(self, index):
+        """Human's turn"""
+        if self.game.board[index] == " " and not self.game.game_over() and not self.ai_turn:
+            self.game.make_move(index, self.game.human_player)
+            self.buttons[index]["text"] = self.game.human_player
+            if self.game.game_over():
+                self.end_game()
+            else:
+                self.ai_turn = True
+                self.master.after(500, self.ai_move)
+
+
+    def ai_move(self):
+        """IA's turn"""
+        if not self.game.game_over():
+            move = self.game.get_best_move()
+            if move is not None:
+                self.game.make_move(move, self.game.ai_player)
+                self.buttons[move]["text"] = self.game.ai_player
+        self.ai_turn = False
+        if self.game.game_over():
+            self.end_game()
+
+
+    def end_game(self):
+        """Display the result of the game and disable the buttons"""
+        winner = self.game.check_winner()
+        if winner:
+            result = f"{winner} wins !"
+        else:
+            result = "It's a tie!"
+        for btn in self.buttons:
+            btn.config(state="disabled")
+        result_label = tk.Label(self.master, text=result, font=("Helvetica", 24))
+        result_label.grid(row=3, column=0, columnspan=3)
+
+    
             
 # Start the game
 if __name__ == "__main__":
-    game = TicTacToe()
-    game.play_game()
+    root = tk.Tk()
+    app = TicTacToeGUI(root)
+    root.mainloop()
